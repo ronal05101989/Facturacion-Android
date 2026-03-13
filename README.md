@@ -1,6 +1,6 @@
 # Facturacion Android
 
-Aplicacion Android en desarrollo inspirada en un sistema de ventas de escritorio para farmacia.  
+Aplicacion Android en desarrollo inspirada en un sistema POS de escritorio para pequenas y medianas empresas.  
 El objetivo es transformar ese flujo de trabajo en una experiencia movil moderna, clara y lista para crecer por modulos.
 
 Repositorio base: [Facturacion-Android](https://github.com/ronal05101989/Facturacion-Android)
@@ -15,7 +15,7 @@ La idea no es solo copiar la interfaz antigua, sino reorganizarla para Android c
 ## Modulos principales
 
 - `POS`: venta rapida, carrito, total, devuelta e impresion.
-- `Stock`: productos, costos, stock bajo y vencimientos.
+- `Stock`: productos, costos, stock, alertas y vencimientos cuando aplique.
 - `Facturas`: historial de ventas, detalle, edicion y eliminacion.
 - `Reportes`: ventas del dia, ganancia, medios de pago y productos mas vendidos.
 - `Configuracion`: licencia, usuarios, datos del negocio, impresora y backup.
@@ -27,7 +27,7 @@ Del sistema Python original se identificaron estas funciones clave:
 - activacion de licencia
 - login de usuarios y roles
 - punto de venta
-- inventario con vencimientos
+- inventario y control de stock
 - historial y edicion de facturas
 - reporte diario
 - configuracion de ticket
