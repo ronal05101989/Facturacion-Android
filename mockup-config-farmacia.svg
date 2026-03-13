@@ -1,0 +1,57 @@
+<svg width="420" height="860" viewBox="0 0 420 860" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="860" rx="36" fill="#E7E3DA"/>
+  <rect x="22" y="18" width="376" height="824" rx="30" fill="#FCFBF8"/>
+  <rect x="160" y="30" width="100" height="10" rx="5" fill="#1F1F1F"/>
+
+  <rect x="38" y="68" width="344" height="142" rx="28" fill="url(#hero)"/>
+  <text x="58" y="112" fill="white" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700">Configuracion</text>
+  <text x="58" y="148" fill="#E7F3EE" font-family="Segoe UI, Arial, sans-serif" font-size="14">Licencia, usuarios, impresora</text>
+  <text x="58" y="168" fill="#E7F3EE" font-family="Segoe UI, Arial, sans-serif" font-size="14">y respaldo del sistema.</text>
+
+  <text x="40" y="246" fill="#1D1E1B" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">Modulos</text>
+
+  <rect x="38" y="268" width="344" height="58" rx="20" fill="white"/>
+  <circle cx="64" cy="297" r="9" fill="#1E4D40"/>
+  <text x="84" y="302" fill="#26302A" font-family="Segoe UI, Arial, sans-serif" font-size="15">Activacion de licencia</text>
+
+  <rect x="38" y="338" width="344" height="58" rx="20" fill="white"/>
+  <circle cx="64" cy="367" r="9" fill="#1E4D40"/>
+  <text x="84" y="372" fill="#26302A" font-family="Segoe UI, Arial, sans-serif" font-size="15">Gestion de usuarios</text>
+
+  <rect x="38" y="408" width="344" height="58" rx="20" fill="white"/>
+  <circle cx="64" cy="437" r="9" fill="#1E4D40"/>
+  <text x="84" y="442" fill="#26302A" font-family="Segoe UI, Arial, sans-serif" font-size="15">Configurar factura e impresora</text>
+
+  <rect x="38" y="478" width="344" height="58" rx="20" fill="white"/>
+  <circle cx="64" cy="507" r="9" fill="#1E4D40"/>
+  <text x="84" y="512" fill="#26302A" font-family="Segoe UI, Arial, sans-serif" font-size="15">Backup automatico</text>
+
+  <text x="40" y="576" fill="#1D1E1B" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">Usuarios</text>
+
+  <rect x="38" y="598" width="344" height="76" rx="22" fill="white"/>
+  <text x="58" y="630" fill="#1F1F1F" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700">admin</text>
+  <text x="58" y="654" fill="#555555" font-family="Segoe UI, Arial, sans-serif" font-size="14">Rol configurado en el sistema</text>
+
+  <rect x="38" y="686" width="344" height="76" rx="22" fill="white"/>
+  <text x="58" y="718" fill="#1F1F1F" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700">caja</text>
+  <text x="58" y="742" fill="#555555" font-family="Segoe UI, Arial, sans-serif" font-size="14">Puede limitar accesos al POS</text>
+
+  <rect x="34" y="778" width="352" height="48" rx="20" fill="#F5EFE7"/>
+  <circle cx="70" cy="802" r="8" fill="#A9AAA6"/>
+  <circle cx="145" cy="802" r="8" fill="#A9AAA6"/>
+  <circle cx="220" cy="802" r="8" fill="#A9AAA6"/>
+  <circle cx="295" cy="802" r="8" fill="#A9AAA6"/>
+  <circle cx="350" cy="802" r="8" fill="#1E4D40"/>
+  <text x="56" y="823" fill="#7E807B" font-family="Segoe UI, Arial, sans-serif" font-size="10">POS</text>
+  <text x="131" y="823" fill="#7E807B" font-family="Segoe UI, Arial, sans-serif" font-size="10">Stock</text>
+  <text x="199" y="823" fill="#7E807B" font-family="Segoe UI, Arial, sans-serif" font-size="10">Facturas</text>
+  <text x="282" y="823" fill="#7E807B" font-family="Segoe UI, Arial, sans-serif" font-size="10">Reportes</text>
+  <text x="336" y="823" fill="#1E4D40" font-family="Segoe UI, Arial, sans-serif" font-size="10">Config</text>
+
+  <defs>
+    <linearGradient id="hero" x1="38" y1="68" x2="382" y2="210" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D4C40"/>
+      <stop offset="1" stop-color="#4B7B61"/>
+    </linearGradient>
+  </defs>
+</svg>

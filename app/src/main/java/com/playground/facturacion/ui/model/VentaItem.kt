@@ -1,10 +1,9 @@
 package com.playground.facturacion.ui.model
 
-data class Producto(
+data class VentaItem(
     val codigo: String,
     val nombre: String,
+    val cantidad: Double,
     val precio: Double,
-    val stock: Int,
-    val costo: Double,
-    val vencimiento: String
+    val subtotal: Double
 )

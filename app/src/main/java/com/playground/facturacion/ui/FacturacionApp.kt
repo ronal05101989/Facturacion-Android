@@ -11,14 +11,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -28,16 +30,13 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -50,15 +49,18 @@ import com.playground.facturacion.ui.data.SampleData
 import com.playground.facturacion.ui.model.Cliente
 import com.playground.facturacion.ui.model.Factura
 import com.playground.facturacion.ui.model.Producto
+import com.playground.facturacion.ui.model.ReporteResumen
+import com.playground.facturacion.ui.model.VentaItem
 
 @Composable
 fun FacturacionApp() {
     val navController = rememberNavController()
     val items = listOf(
-        AppDestination.Resumen,
-        AppDestination.Clientes,
-        AppDestination.Productos,
-        AppDestination.Facturas
+        AppDestination.Pos,
+        AppDestination.Inventario,
+        AppDestination.Facturas,
+        AppDestination.Reportes,
+        AppDestination.Configuracion
     )
 
     Scaffold(
@@ -93,24 +95,38 @@ fun FacturacionApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = AppDestination.Resumen.route,
+            startDestination = AppDestination.Pos.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(AppDestination.Resumen.route) {
-                ResumenScreen(
-                    clientes = SampleData.clientes,
+            composable(AppDestination.Pos.route) {
+                PosScreen(
+                    carrito = SampleData.carritoDemo,
+                    reporte = SampleData.reporteResumen
+                )
+            }
+            composable(AppDestination.Inventario.route) {
+                InventarioScreen(
                     productos = SampleData.productos,
+                    stockBajo = SampleData.productos.filter { it.stock <= 5 }
+                )
+            }
+            composable(AppDestination.Facturas.route) {
+                FacturasScreen(
+                    facturas = SampleData.facturas,
+                    clientes = SampleData.clientes
+                )
+            }
+            composable(AppDestination.Reportes.route) {
+                ReportesScreen(
+                    reporte = SampleData.reporteResumen,
                     facturas = SampleData.facturas
                 )
             }
-            composable(AppDestination.Clientes.route) {
-                ClientesScreen(clientes = SampleData.clientes)
-            }
-            composable(AppDestination.Productos.route) {
-                ProductosScreen(productos = SampleData.productos)
-            }
-            composable(AppDestination.Facturas.route) {
-                FacturasScreen(facturas = SampleData.facturas)
+            composable(AppDestination.Configuracion.route) {
+                ConfiguracionScreen(
+                    clientes = SampleData.clientes,
+                    usuarios = SampleData.usuariosDemo
+                )
             }
         }
     }
@@ -119,38 +135,29 @@ fun FacturacionApp() {
 private sealed class AppDestination(
     val route: String,
     val label: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val icon: ImageVector
 ) {
-    data object Resumen : AppDestination("resumen", "Inicio", Icons.Outlined.Home)
-    data object Clientes : AppDestination("clientes", "Clientes", Icons.Outlined.People)
-    data object Productos : AppDestination("productos", "Productos", Icons.Outlined.Inventory2)
+    data object Pos : AppDestination("pos", "POS", Icons.Outlined.PointOfSale)
+    data object Inventario : AppDestination("inventario", "Stock", Icons.Outlined.Inventory2)
     data object Facturas : AppDestination("facturas", "Facturas", Icons.Outlined.ReceiptLong)
+    data object Reportes : AppDestination("reportes", "Reportes", Icons.Outlined.Assessment)
+    data object Configuracion : AppDestination("configuracion", "Config", Icons.Outlined.Settings)
 }
 
 @Composable
-private fun ResumenScreen(
-    clientes: List<Cliente>,
-    productos: List<Producto>,
-    facturas: List<Factura>
+private fun PosScreen(
+    carrito: List<VentaItem>,
+    reporte: ReporteResumen
 ) {
-    val totalFacturado = facturas.sumOf { it.total }
-    val facturasPendientes = facturas.count { it.estado == "Pendiente" }
-
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFF6F1E9), Color(0xFFFFFFFF))
-                )
-            ),
+        modifier = screenModifier(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
             HeroCard(
-                title = "Panel de facturacion",
-                subtitle = "Controla clientes, inventario y cobros desde una sola app."
+                title = "Vende Facil RD",
+                subtitle = "POS para farmacia con inventario, facturas, backup y control por rol."
             )
         }
         item {
@@ -160,15 +167,58 @@ private fun ResumenScreen(
             ) {
                 SummaryCard(
                     modifier = Modifier.weight(1f),
-                    title = "Clientes",
-                    value = clientes.size.toString()
+                    title = "Ventas hoy",
+                    value = "RD$ ${"%.2f".format(reporte.ventas)}"
                 )
                 SummaryCard(
                     modifier = Modifier.weight(1f),
-                    title = "Productos",
-                    value = productos.size.toString()
+                    title = "Ganancia",
+                    value = "RD$ ${"%.2f".format(reporte.ganancia)}"
                 )
             }
+        }
+        item {
+            SectionTitle("Acciones principales")
+        }
+        items(
+            listOf(
+                "Agregar por codigo de barras",
+                "Guardar venta",
+                "Guardar e imprimir ticket",
+                "Reimprimir ultimo ticket",
+                "Abrir ventas",
+                "Calcular devuelta"
+            )
+        ) { action ->
+            ActionCard(title = action)
+        }
+        item {
+            SectionTitle("Carrito / factura actual")
+        }
+        items(carrito) { item ->
+            SaleItemCard(item = item)
+        }
+        item {
+            TotalCard(total = carrito.sumOf { it.subtotal }, devuelta = 50.0)
+        }
+    }
+}
+
+@Composable
+private fun InventarioScreen(
+    productos: List<Producto>,
+    stockBajo: List<Producto>
+) {
+    LazyColumn(
+        modifier = screenModifier(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        item {
+            HeroCard(
+                title = "Inventario",
+                subtitle = "Registro de productos, costo, stock, vencimiento y alertas de farmacia."
+            )
         }
         item {
             Row(
@@ -177,18 +227,137 @@ private fun ResumenScreen(
             ) {
                 SummaryCard(
                     modifier = Modifier.weight(1f),
-                    title = "Facturado",
-                    value = "$${"%.2f".format(totalFacturado)}"
+                    title = "Productos",
+                    value = productos.size.toString()
                 )
                 SummaryCard(
                     modifier = Modifier.weight(1f),
-                    title = "Pendientes",
-                    value = facturasPendientes.toString()
+                    title = "Stock bajo",
+                    value = stockBajo.size.toString()
                 )
             }
         }
         item {
-            SectionTitle("Facturas recientes")
+            SectionTitle("Alertas de vencimiento y stock")
+        }
+        items(stockBajo) { producto ->
+            AlertCard(
+                title = producto.nombre,
+                description = "Stock: ${producto.stock} | Vence: ${producto.vencimiento.ifBlank { "Sin fecha" }}"
+            )
+        }
+        item {
+            SectionTitle("Catalogo")
+        }
+        items(productos) { producto ->
+            ProductoCard(producto = producto)
+        }
+    }
+}
+
+@Composable
+private fun FacturasScreen(
+    facturas: List<Factura>,
+    clientes: List<Cliente>
+) {
+    LazyColumn(
+        modifier = screenModifier(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        item {
+            HeroCard(
+                title = "Facturas y ventas",
+                subtitle = "Historial, edicion de lineas, anulacion y seguimiento del cliente."
+            )
+        }
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SummaryCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Facturas",
+                    value = facturas.size.toString()
+                )
+                SummaryCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Clientes",
+                    value = clientes.size.toString()
+                )
+            }
+        }
+        item {
+            SectionTitle("Historial")
+        }
+        items(facturas) { factura ->
+            FacturaCard(factura = factura)
+        }
+    }
+}
+
+@Composable
+private fun ReportesScreen(
+    reporte: ReporteResumen,
+    facturas: List<Factura>
+) {
+    LazyColumn(
+        modifier = screenModifier(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        item {
+            HeroCard(
+                title = "Reporte diario",
+                subtitle = "Resumen de ventas, ganancia, metodos de pago y rendimiento por producto."
+            )
+        }
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SummaryCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Ventas",
+                    value = "RD$ ${"%.2f".format(reporte.ventas)}"
+                )
+                SummaryCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Facturas",
+                    value = reporte.facturas.toString()
+                )
+            }
+        }
+        item {
+            SummaryCard(
+                title = "Ganancia estimada",
+                value = "RD$ ${"%.2f".format(reporte.ganancia)}"
+            )
+        }
+        item {
+            SectionTitle("Metodos de pago")
+        }
+        items(reporte.porPago.toList()) { (metodo, total) ->
+            InfoCard(
+                title = metodo,
+                line1 = "Total: RD$ ${"%.2f".format(total)}",
+                line2 = "Participacion en el cierre diario"
+            )
+        }
+        item {
+            SectionTitle("Productos mas vendidos")
+        }
+        items(reporte.porProducto.toList()) { (producto, cantidad) ->
+            InfoCard(
+                title = producto,
+                line1 = "Cantidad vendida: ${"%.0f".format(cantidad)}",
+                line2 = "Consolidado desde ventas del dia"
+            )
+        }
+        item {
+            SectionTitle("Facturas incluidas")
         }
         items(facturas.take(3)) { factura ->
             FacturaCard(factura = factura)
@@ -197,11 +366,49 @@ private fun ResumenScreen(
 }
 
 @Composable
-private fun ClientesScreen(clientes: List<Cliente>) {
-    EntityListScreen(
-        title = "Clientes",
-        subtitle = "Base de clientes para emitir facturas rapidamente."
+private fun ConfiguracionScreen(
+    clientes: List<Cliente>,
+    usuarios: List<String>
+) {
+    LazyColumn(
+        modifier = screenModifier(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        item {
+            HeroCard(
+                title = "Configuracion",
+                subtitle = "Licencia, usuarios, datos del negocio, mensajes del ticket y respaldos."
+            )
+        }
+        item {
+            SectionTitle("Modulos del sistema Python")
+        }
+        items(
+            listOf(
+                "Activacion de licencia",
+                "Inicio de sesion por usuario",
+                "Gestion de usuarios",
+                "Configurar factura",
+                "Backup automatico",
+                "Impresora y ticket"
+            )
+        ) { module ->
+            ActionCard(title = module)
+        }
+        item {
+            SectionTitle("Usuarios de ejemplo")
+        }
+        items(usuarios) { usuario ->
+            InfoCard(
+                title = usuario,
+                line1 = "Rol configurado en el sistema",
+                line2 = "Puede condicionar accesos en Android"
+            )
+        }
+        item {
+            SectionTitle("Clientes registrados")
+        }
         items(clientes) { cliente ->
             InfoCard(
                 title = cliente.nombre,
@@ -212,82 +419,20 @@ private fun ClientesScreen(clientes: List<Cliente>) {
     }
 }
 
-@Composable
-private fun ProductosScreen(productos: List<Producto>) {
-    EntityListScreen(
-        title = "Productos",
-        subtitle = "Catalogo inicial para ventas y control de stock."
-    ) {
-        items(productos) { producto ->
-            InfoCard(
-                title = producto.nombre,
-                line1 = "Precio: $${"%.2f".format(producto.precio)}",
-                line2 = "Stock: ${producto.stock}"
+private fun screenModifier(): Modifier {
+    return Modifier
+        .fillMaxSize()
+        .background(
+            brush = Brush.verticalGradient(
+                colors = listOf(Color(0xFFF6F1E9), Color.White)
             )
-        }
-    }
-}
-
-@Composable
-private fun FacturasScreen(facturas: List<Factura>) {
-    var filtroPendientes by remember { mutableStateOf(false) }
-    val lista = if (filtroPendientes) {
-        facturas.filter { it.estado == "Pendiente" }
-    } else {
-        facturas
-    }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            HeroCard(
-                title = "Facturas emitidas",
-                subtitle = if (filtroPendientes) {
-                    "Mostrando solo documentos pendientes de cobro."
-                } else {
-                    "Historial resumido de ventas con estado de pago."
-                },
-                actionText = if (filtroPendientes) "Ver todas" else "Solo pendientes",
-                onAction = { filtroPendientes = !filtroPendientes }
-            )
-        }
-        items(lista) { factura ->
-            FacturaCard(factura = factura)
-        }
-    }
-}
-
-@Composable
-private fun EntityListScreen(
-    title: String,
-    subtitle: String,
-    content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit
-) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            HeroCard(title = title, subtitle = subtitle)
-        }
-        content()
-    }
+        )
 }
 
 @Composable
 private fun HeroCard(
     title: String,
-    subtitle: String,
-    actionText: String? = null,
-    onAction: (() -> Unit)? = null
+    subtitle: String
 ) {
     Surface(
         shape = RoundedCornerShape(28.dp),
@@ -314,25 +459,20 @@ private fun HeroCard(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.88f)
+                    color = Color.White.copy(alpha = 0.9f)
                 )
-                if (actionText != null && onAction != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(
-                        onClick = onAction,
-                        modifier = Modifier
-                            .background(
-                                color = Color.White.copy(alpha = 0.16f),
-                                shape = RoundedCornerShape(50)
-                            )
-                            .align(Alignment.Start)
-                    ) {
-                        Text(text = actionText, color = Color.White)
-                    }
-                }
             }
         }
     }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 @Composable
@@ -361,6 +501,99 @@ private fun SummaryCard(
 }
 
 @Composable
+private fun ActionCard(title: String) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.PointOfSale,
+                contentDescription = null,
+                tint = Color(0xFF1E4D40)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlertCard(
+    title: String,
+    description: String
+) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4E5))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(text = description, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Composable
+private fun ProductoCard(producto: Producto) {
+    InfoCard(
+        title = producto.nombre,
+        line1 = "Codigo ${producto.codigo} | Precio: RD$ ${"%.2f".format(producto.precio)}",
+        line2 = "Stock: ${producto.stock} | Costo: RD$ ${"%.2f".format(producto.costo)} | Vence: ${producto.vencimiento.ifBlank { "N/D" }}"
+    )
+}
+
+@Composable
+private fun SaleItemCard(item: VentaItem) {
+    InfoCard(
+        title = item.nombre,
+        line1 = "Cant: ${"%.0f".format(item.cantidad)} | Precio: RD$ ${"%.2f".format(item.precio)}",
+        line2 = "Subtotal: RD$ ${"%.2f".format(item.subtotal)}"
+    )
+}
+
+@Composable
+private fun TotalCard(total: Double, devuelta: Double) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F473C))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(text = "Total venta", color = Color.White.copy(alpha = 0.9f))
+            Text(
+                text = "RD$ ${"%.2f".format(total)}",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Devuelta estimada: RD$ ${"%.2f".format(devuelta)}",
+                color = Color.White.copy(alpha = 0.84f)
+            )
+        }
+    }
+}
+
+@Composable
 private fun InfoCard(
     title: String,
     line1: String,
@@ -368,7 +601,7 @@ private fun InfoCard(
 ) {
     Card(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFFFF))
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -378,7 +611,11 @@ private fun InfoCard(
         ) {
             Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(text = line1, style = MaterialTheme.typography.bodyMedium)
-            Text(text = line2, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = line2,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -413,24 +650,12 @@ private fun FacturaCard(factura: Factura) {
                 )
             }
             Text(text = factura.cliente, style = MaterialTheme.typography.bodyLarge)
+            Text(text = "Total: RD$ ${"%.2f".format(factura.total)}", style = MaterialTheme.typography.bodyMedium)
             Text(
-                text = "Total: $${"%.2f".format(factura.total)}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Fecha: ${factura.fecha}",
+                text = "Fecha: ${factura.fecha} | Pago: ${factura.metodoPago}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold
-    )
 }

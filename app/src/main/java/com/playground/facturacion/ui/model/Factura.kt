@@ -5,5 +5,6 @@ data class Factura(
     val cliente: String,
     val fecha: String,
     val total: Double,
-    val estado: String
+    val estado: String,
+    val metodoPago: String
 )

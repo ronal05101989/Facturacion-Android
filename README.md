@@ -17,6 +17,7 @@ Proyecto base para una aplicacion Android de facturacion construida con Kotlin y
 - `app/src/main/java/com/playground/facturacion/ui/model`: modelos de dominio.
 - `app/src/main/java/com/playground/facturacion/ui/data/SampleData.kt`: datos semilla.
 - `gradlew` y `gradlew.bat`: wrapper de Gradle para abrir y compilar el proyecto.
+- `docs/python-to-android-map.md`: equivalencia entre el sistema Python original y la app Android.
 
 ## Siguientes pasos sugeridos
 
