@@ -19,6 +19,28 @@ Proyecto base para una aplicacion Android de facturacion construida con Kotlin y
 - `gradlew` y `gradlew.bat`: wrapper de Gradle para abrir y compilar el proyecto.
 - `docs/python-to-android-map.md`: equivalencia entre el sistema Python original y la app Android.
 
+## Vista previa visual
+
+### POS
+
+![POS farmacia](./mockup-pos-farmacia.svg)
+
+### Stock
+
+![Stock farmacia](./mockup-stock-farmacia.svg)
+
+### Facturas
+
+![Facturas farmacia](./mockup-facturas-farmacia.svg)
+
+### Reportes
+
+![Reportes farmacia](./mockup-reportes-farmacia.svg)
+
+### Configuracion
+
+![Configuracion farmacia](./mockup-config-farmacia.svg)
+
 ## Siguientes pasos sugeridos
 
 1. Persistencia local con Room para clientes, productos y facturas.
