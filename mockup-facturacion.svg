@@ -1,0 +1,58 @@
+<svg width="420" height="860" viewBox="0 0 420 860" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="860" rx="36" fill="#E9E1D5"/>
+  <rect x="22" y="18" width="376" height="824" rx="30" fill="#FCFAF6"/>
+  <rect x="160" y="30" width="100" height="10" rx="5" fill="#1F1F1F"/>
+
+  <rect x="38" y="68" width="344" height="150" rx="28" fill="url(#hero)"/>
+  <text x="58" y="112" fill="white" font-family="Segoe UI, Arial, sans-serif" font-size="16">Panel de facturacion</text>
+  <text x="58" y="150" fill="white" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700">Control total</text>
+  <text x="58" y="180" fill="#E8F3EC" font-family="Segoe UI, Arial, sans-serif" font-size="15">Clientes, productos y facturas</text>
+  <text x="58" y="200" fill="#E8F3EC" font-family="Segoe UI, Arial, sans-serif" font-size="15">desde una sola app.</text>
+
+  <rect x="38" y="238" width="166" height="102" rx="24" fill="#F6F0E8"/>
+  <text x="58" y="276" fill="#5C564F" font-family="Segoe UI, Arial, sans-serif" font-size="14">Clientes</text>
+  <text x="58" y="315" fill="#172019" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700">3</text>
+
+  <rect x="216" y="238" width="166" height="102" rx="24" fill="#F6F0E8"/>
+  <text x="236" y="276" fill="#5C564F" font-family="Segoe UI, Arial, sans-serif" font-size="14">Productos</text>
+  <text x="236" y="315" fill="#172019" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700">4</text>
+
+  <rect x="38" y="354" width="166" height="102" rx="24" fill="#F6F0E8"/>
+  <text x="58" y="392" fill="#5C564F" font-family="Segoe UI, Arial, sans-serif" font-size="14">Facturado</text>
+  <text x="58" y="431" fill="#172019" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700">$1550</text>
+
+  <rect x="216" y="354" width="166" height="102" rx="24" fill="#F6F0E8"/>
+  <text x="236" y="392" fill="#5C564F" font-family="Segoe UI, Arial, sans-serif" font-size="14">Pendientes</text>
+  <text x="236" y="431" fill="#172019" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700">2</text>
+
+  <text x="40" y="500" fill="#1E1E1E" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">Facturas recientes</text>
+
+  <rect x="38" y="524" width="344" height="108" rx="22" fill="white"/>
+  <text x="58" y="560" fill="#1F1F1F" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">FAC-0012</text>
+  <text x="305" y="560" fill="#2E7D32" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Pagada</text>
+  <text x="58" y="590" fill="#444444" font-family="Segoe UI, Arial, sans-serif" font-size="16">Tecno Red</text>
+  <text x="58" y="616" fill="#666666" font-family="Segoe UI, Arial, sans-serif" font-size="14">Total: $365.50   Fecha: 2026-03-10</text>
+
+  <rect x="38" y="646" width="344" height="108" rx="22" fill="white"/>
+  <text x="58" y="682" fill="#1F1F1F" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">FAC-0013</text>
+  <text x="284" y="682" fill="#B77709" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Pendiente</text>
+  <text x="58" y="712" fill="#444444" font-family="Segoe UI, Arial, sans-serif" font-size="16">Comercial Luna</text>
+  <text x="58" y="738" fill="#666666" font-family="Segoe UI, Arial, sans-serif" font-size="14">Total: $980.00   Fecha: 2026-03-11</text>
+
+  <rect x="34" y="778" width="352" height="48" rx="20" fill="#F5EFE7"/>
+  <circle cx="85" cy="802" r="8" fill="#1E4D40"/>
+  <circle cx="165" cy="802" r="8" fill="#A9AAA6"/>
+  <circle cx="245" cy="802" r="8" fill="#A9AAA6"/>
+  <circle cx="325" cy="802" r="8" fill="#A9AAA6"/>
+  <text x="68" y="823" fill="#1E4D40" font-family="Segoe UI, Arial, sans-serif" font-size="11">Inicio</text>
+  <text x="142" y="823" fill="#7E807B" font-family="Segoe UI, Arial, sans-serif" font-size="11">Clientes</text>
+  <text x="220" y="823" fill="#7E807B" font-family="Segoe UI, Arial, sans-serif" font-size="11">Productos</text>
+  <text x="304" y="823" fill="#7E807B" font-family="Segoe UI, Arial, sans-serif" font-size="11">Facturas</text>
+
+  <defs>
+    <linearGradient id="hero" x1="38" y1="68" x2="382" y2="218" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E4D40"/>
+      <stop offset="1" stop-color="#44795B"/>
+    </linearGradient>
+  </defs>
+</svg>
