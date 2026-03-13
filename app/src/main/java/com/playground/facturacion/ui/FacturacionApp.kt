@@ -157,7 +157,7 @@ private fun PosScreen(
         item {
             HeroCard(
                 title = "Vende Facil RD",
-                subtitle = "POS para farmacia con inventario, facturas, backup y control por rol."
+                subtitle = null
             )
         }
         item {
@@ -432,7 +432,7 @@ private fun screenModifier(): Modifier {
 @Composable
 private fun HeroCard(
     title: String,
-    subtitle: String
+    subtitle: String?
 ) {
     Surface(
         shape = RoundedCornerShape(28.dp),
@@ -456,11 +456,13 @@ private fun HeroCard(
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.9f)
-                )
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
             }
         }
     }
