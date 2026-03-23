@@ -1,578 +1,332 @@
 package com.playground.facturacion.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Assessment
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.PointOfSale
-import androidx.compose.material.icons.outlined.ReceiptLong
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.playground.facturacion.ui.data.SampleData
-import com.playground.facturacion.ui.model.Cliente
-import com.playground.facturacion.ui.model.Factura
-import com.playground.facturacion.ui.model.Producto
-import com.playground.facturacion.ui.model.ReporteResumen
-import com.playground.facturacion.ui.model.VentaItem
+import com.playground.facturacion.core.AppContainer
+import com.playground.facturacion.core.AppViewModelFactory
+import com.playground.facturacion.domain.*
+import com.playground.facturacion.presentation.*
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 @Composable
-fun FacturacionApp() {
+fun FacturacionApp(container: AppContainer) {
+    val factory = remember(container) { AppViewModelFactory(container) }
+    val loginViewModel: LoginViewModel = viewModel(factory = factory)
+    val session by loginViewModel.session.collectAsStateWithLifecycle()
+
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        if (session == null) {
+            LoginScreen(loginViewModel)
+        } else {
+            MainShell(factory = factory, user = requireNotNull(session))
+        }
+    }
+}
+
+private data class DrawerDestination(
+    val route: String,
+    val title: String,
+    val icon: ImageVector,
+    val adminOnly: Boolean = false
+)
+
+private data class DashboardShortcut(
+    val title: String,
+    val subtitle: String,
+    val route: String,
+    val icon: ImageVector,
+    val color: Color,
+    val adminOnly: Boolean = false
+)
+
+private data class DashboardMetric(
+    val title: String,
+    val value: String,
+    val icon: ImageVector,
+    val color: Color
+)
+
+private val appDestinations = listOf(
+    DrawerDestination("dashboard", "Dashboard", Icons.Outlined.Assessment),
+    DrawerDestination("inventory", "Inventario", Icons.Outlined.Inventory2),
+    DrawerDestination("sales", "Ventas", Icons.Outlined.PointOfSale),
+    DrawerDestination("customers", "Clientes", Icons.Outlined.People),
+    DrawerDestination("suppliers", "Proveedores", Icons.Outlined.Groups, adminOnly = true),
+    DrawerDestination("purchases", "Compras", Icons.Outlined.ShoppingCart, adminOnly = true),
+    DrawerDestination("cash", "Caja", Icons.Outlined.Payments),
+    DrawerDestination("reports", "Reportes", Icons.Outlined.ReceiptLong, adminOnly = true),
+    DrawerDestination("audit", "Auditoria", Icons.Outlined.Badge, adminOnly = true)
+)
+
+private val dashboardShortcuts = listOf(
+    DashboardShortcut("Productos", "Inventario y stock", "inventory", Icons.Outlined.Inventory2, Color(0xFFF57C00)),
+    DashboardShortcut("Ventas", "Facturacion rapida", "sales", Icons.Outlined.PointOfSale, Color(0xFF00897B)),
+    DashboardShortcut("Clientes", "Base comercial", "customers", Icons.Outlined.People, Color(0xFF1565C0)),
+    DashboardShortcut("Compras", "Reposicion y costos", "purchases", Icons.Outlined.ShoppingCart, Color(0xFFEF6C00), adminOnly = true),
+    DashboardShortcut("Caja", "Apertura y cierre", "cash", Icons.Outlined.Payments, Color(0xFF2E7D32)),
+    DashboardShortcut("Reportes", "Resumen del negocio", "reports", Icons.Outlined.Assessment, Color(0xFF1976D2), adminOnly = true),
+    DashboardShortcut("Ajustes", "Configuracion general", "suppliers", Icons.Outlined.Category, Color(0xFFD84315), adminOnly = true),
+    DashboardShortcut("Mas", "Auditoria y control", "audit", Icons.Outlined.Badge, Color(0xFF546E7A), adminOnly = true)
+)
+
+@Composable
+private fun LoginScreen(viewModel: LoginViewModel) {
+    val state = viewModel.uiState
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp)) {
+            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Venta Fácil RD", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text("POS Android offline con Room y MVVM", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(value = state.username, onValueChange = viewModel::updateUsername, modifier = Modifier.fillMaxWidth(), label = { Text("Usuario") })
+                OutlinedTextField(value = state.password, onValueChange = viewModel::updatePassword, modifier = Modifier.fillMaxWidth(), label = { Text("Clave") })
+                OutlinedTextField(value = state.licenseKey, onValueChange = viewModel::updateLicense, modifier = Modifier.fillMaxWidth(), label = { Text("Licencia") })
+                Button(onClick = viewModel::login, modifier = Modifier.fillMaxWidth(), enabled = !state.loading) {
+                    Text(if (state.loading) "Entrando..." else "Iniciar sesion")
+                }
+                state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                Text("Demo: admin / 1234 / DEMO-2026-FACTURACION", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainShell(factory: AppViewModelFactory, user: LoggedInUser) {
+    val dashboardViewModel: DashboardViewModel = viewModel(factory = factory)
+    val inventoryViewModel: InventoryViewModel = viewModel(factory = factory)
+    val customersViewModel: CustomersViewModel = viewModel(factory = factory)
+    val suppliersViewModel: SuppliersViewModel = viewModel(factory = factory)
+    val salesViewModel: SalesViewModel = viewModel(factory = factory)
+    val purchasesViewModel: PurchasesViewModel = viewModel(factory = factory)
+    val cashViewModel: CashViewModel = viewModel(factory = factory)
+    val reportsViewModel: ReportsViewModel = viewModel(factory = factory)
+    val auditViewModel: AuditViewModel = viewModel(factory = factory)
+
     val navController = rememberNavController()
-    val items = listOf(
-        AppDestination.Pos,
-        AppDestination.Inventario,
-        AppDestination.Facturas,
-        AppDestination.Reportes,
-        AppDestination.Configuracion
-    )
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val destinations = remember(user.role) { appDestinations.filter { !it.adminOnly || user.role == UserRole.ADMIN } }
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
+    ObserveMessage(inventoryViewModel.message, snackbarHostState, inventoryViewModel::clearMessage)
+    ObserveMessage(customersViewModel.message, snackbarHostState, customersViewModel::clearMessage)
+    ObserveMessage(suppliersViewModel.message, snackbarHostState, suppliersViewModel::clearMessage)
+    ObserveMessage(salesViewModel.message, snackbarHostState, salesViewModel::clearMessage)
+    ObserveMessage(purchasesViewModel.message, snackbarHostState, purchasesViewModel::clearMessage)
+    ObserveMessage(cashViewModel.message, snackbarHostState, cashViewModel::clearMessage)
 
-                items.forEach { destination ->
-                    NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(modifier = Modifier.height(12.dp))
+                destinations.forEach { item ->
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
+                    val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                    NavigationDrawerItem(
+                        icon = { Icon(item.icon, contentDescription = null) },
+                        label = { Text(item.title) },
+                        selected = selected,
                         onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                            scope.launch { drawerState.close() }
                         },
-                        icon = {
-                            Icon(
-                                imageVector = destination.icon,
-                                contentDescription = destination.label
-                            )
-                        },
-                        label = { Text(destination.label) }
+                        modifier = Modifier.padding(horizontal = 12.dp)
                     )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null) },
+                    label = { Text("Cerrar sesion") },
+                    selected = false,
+                    onClick = { dashboardViewModel.logout() },
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Venta Fácil RD", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Outlined.Menu, contentDescription = "Menu")
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            }
+        ) { padding ->
+            NavHost(
+                navController = navController,
+                startDestination = "dashboard",
+                modifier = Modifier.padding(padding)
+            ) {
+                composable("dashboard") { DashboardScreen(dashboardViewModel, auditViewModel, navController, user) }
+                composable("inventory") { InventoryScreen(inventoryViewModel) }
+                composable("sales") { SalesScreen(salesViewModel, navController) }
+                composable("customers") { CustomersScreen(customersViewModel, salesViewModel, navController) }
+                composable("suppliers") { SuppliersScreen(suppliersViewModel) }
+                composable("purchases") { PurchasesScreen(purchasesViewModel) }
+                composable("cash") { CashScreen(cashViewModel) }
+                composable("reports") { ReportsScreen(reportsViewModel) }
+                composable("audit") { AuditScreen(auditViewModel) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ObserveMessage(message: String?, host: SnackbarHostState, onClear: () -> Unit) {
+    LaunchedEffect(message) {
+        if (message != null) {
+            host.showSnackbar(message)
+            onClear()
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DashboardScreen(
+    viewModel: DashboardViewModel,
+    auditViewModel: AuditViewModel,
+    navController: androidx.navigation.NavController,
+    user: LoggedInUser
+) {
+    val overview by viewModel.overview.collectAsStateWithLifecycle()
+    val logs by auditViewModel.logs.collectAsStateWithLifecycle()
+
+    val metrics = remember(overview) {
+        listOf(
+            DashboardMetric("Ventas hoy", "RD$ ${"%.2f".format(overview.todaySales)}", Icons.Outlined.Payments, Color(0xFF2E7D32)),
+            DashboardMetric("Productos", "${overview.productCount}", Icons.Outlined.Inventory2, Color(0xFF1565C0)),
+            DashboardMetric("Stock bajo", "${overview.lowStockCount}", Icons.Outlined.Inventory, Color(0xFFD32F2F)),
+            DashboardMetric("Clientes", "${overview.customerCount}", Icons.Outlined.People, Color(0xFFF57C00))
+        )
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        item {
+            Column {
+                Text("Bienvenido, ${user.fullName}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("Estado del negocio hoy", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        item { SummaryGrid(metrics) }
+
+        item {
+            Text("Accesos directos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+
+        item {
+            val shortcuts = remember(user.role) { dashboardShortcuts.filter { !it.adminOnly || user.role == UserRole.ADMIN } }
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                shortcuts.forEach { shortcut ->
+                    ShortcutTile(shortcut) { navController.navigate(shortcut.route) }
                 }
             }
         }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = AppDestination.Pos.route,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(AppDestination.Pos.route) {
-                PosScreen(
-                    carrito = SampleData.carritoDemo,
-                    reporte = SampleData.reporteResumen
-                )
+
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Actividad reciente", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                TextButton(onClick = { navController.navigate("audit") }) { Text("Ver todo") }
             }
-            composable(AppDestination.Inventario.route) {
-                InventarioScreen(
-                    productos = SampleData.productos,
-                    stockBajo = SampleData.productos.filter { it.stock <= 5 }
-                )
-            }
-            composable(AppDestination.Facturas.route) {
-                FacturasScreen(
-                    facturas = SampleData.facturas,
-                    clientes = SampleData.clientes
-                )
-            }
-            composable(AppDestination.Reportes.route) {
-                ReportesScreen(
-                    reporte = SampleData.reporteResumen,
-                    facturas = SampleData.facturas
-                )
-            }
-            composable(AppDestination.Configuracion.route) {
-                ConfiguracionScreen(
-                    clientes = SampleData.clientes,
-                    usuarios = SampleData.usuariosDemo
-                )
-            }
+        }
+
+        items(logs.take(5)) { log ->
+            ActivityItem(log)
         }
     }
 }
 
-private sealed class AppDestination(
-    val route: String,
-    val label: String,
-    val icon: ImageVector
-) {
-    data object Pos : AppDestination("pos", "HOME", Icons.Outlined.Home)
-    data object Inventario : AppDestination("inventario", "Stock", Icons.Outlined.Inventory2)
-    data object Facturas : AppDestination("facturas", "Facturas", Icons.Outlined.ReceiptLong)
-    data object Reportes : AppDestination("reportes", "Reportes", Icons.Outlined.Assessment)
-    data object Configuracion : AppDestination("configuracion", "Config", Icons.Outlined.Settings)
-}
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PosScreen(
-    carrito: List<VentaItem>,
-    reporte: ReporteResumen
-) {
-    LazyColumn(
-        modifier = screenModifier(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        item {
-            BrandHeroCard()
-        }
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                SummaryCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Ventas hoy",
-                    value = "RD$ ${"%.2f".format(reporte.ventas)}"
-                )
-                SummaryCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Ganancias",
-                    value = "RD$ ${"%.2f".format(reporte.ganancia)}"
-                )
-            }
-        }
-        item {
-            SectionTitle("Acciones principales")
-        }
-        items(
-            listOf(
-                "Agregar por codigo de barras",
-                "Guardar venta",
-                "Guardar e imprimir ticket",
-                "Reimprimir ultimo ticket",
-                "Abrir ventas",
-                "Calcular devuelta"
-            )
-        ) { action ->
-            ActionCard(title = action)
-        }
-        item {
-            SectionTitle("Carrito / factura actual")
-        }
-        items(carrito) { item ->
-            SaleItemCard(item = item)
-        }
-        item {
-            TotalCard(total = carrito.sumOf { it.subtotal }, devuelta = 50.0)
-        }
-    }
-}
-
-@Composable
-private fun InventarioScreen(
-    productos: List<Producto>,
-    stockBajo: List<Producto>
-) {
-    var showAddDialog by remember { mutableStateOf(false) }
-    var productosState by remember { mutableStateOf(productos) }
-    val stockBajoState = productosState.filter { it.stock <= 5 }
-    val inventoryAlerts = productosState.mapNotNull(::buildInventoryAlert)
-
-    Box(modifier = screenModifier()) {
-        LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+private fun SummaryGrid(values: List<DashboardMetric>) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val tileWidth = if (maxWidth > 560.dp) 220.dp else 160.dp
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                HeroCard(
-                    title = "Inventario",
-                    subtitle = "Registro de productos, costo, stock, vencimiento y alertas de farmacia."
-                )
-            }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+            values.forEach { metric ->
+                Card(
+                    modifier = Modifier.width(tileWidth),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F9FC)),
+                    shape = RoundedCornerShape(18.dp)
                 ) {
-                    SummaryCard(
-                        modifier = Modifier.weight(1f),
-                        title = "Productos",
-                        value = productosState.size.toString()
-                    )
-                    SummaryCard(
-                        modifier = Modifier.weight(1f),
-                        title = "Stock bajo",
-                        value = stockBajoState.size.toString()
-                    )
-                }
-            }
-            item {
-                SectionTitle("Alertas de vencimiento y stock")
-            }
-            items(inventoryAlerts) { alert ->
-                AlertCard(
-                    title = alert.title,
-                    description = alert.description
-                )
-            }
-            item {
-                SectionTitle("Catalogo")
-            }
-            items(productosState) { producto ->
-                ProductoCard(producto = producto)
-            }
-        }
-
-        FloatingActionButton(
-            onClick = { showAddDialog = true },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 20.dp),
-            containerColor = Color(0xFF1E4D40),
-            contentColor = Color.White
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = "Agregar producto"
-            )
-        }
-    }
-
-    if (showAddDialog) {
-        AddProductDialog(
-            onDismiss = { showAddDialog = false },
-            onAddProduct = { producto ->
-                productosState = productosState + producto
-                showAddDialog = false
-            }
-        )
-    }
-}
-
-private data class InventoryAlert(
-    val title: String,
-    val description: String
-)
-
-private fun buildInventoryAlert(producto: Producto): InventoryAlert? {
-    val alertas = mutableListOf<String>()
-
-    if (producto.stock <= 5) {
-        alertas += "Stock bajo: ${producto.stock} unidades"
-    }
-
-    val estadoVencimiento = buildExpirationAlert(producto.vencimiento)
-    if (estadoVencimiento != null) {
-        alertas += estadoVencimiento
-    }
-
-    if (alertas.isEmpty()) return null
-
-    return InventoryAlert(
-        title = producto.nombre,
-        description = alertas.joinToString(" | ")
-    )
-}
-
-private fun buildExpirationAlert(vencimiento: String): String? {
-    if (vencimiento.isBlank()) return null
-
-    val formato = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
-        isLenient = false
-    }
-    val fechaVencimiento = formato.parse(vencimiento) ?: return null
-
-    val hoy = Calendar.getInstance()
-    hoy.set(Calendar.HOUR_OF_DAY, 0)
-    hoy.set(Calendar.MINUTE, 0)
-    hoy.set(Calendar.SECOND, 0)
-    hoy.set(Calendar.MILLISECOND, 0)
-
-    val diferenciaMillis = fechaVencimiento.time - hoy.timeInMillis
-    val diasRestantes = TimeUnit.MILLISECONDS.toDays(diferenciaMillis)
-
-    return when {
-        diasRestantes < 0 -> "Vencido hace ${kotlin.math.abs(diasRestantes)} dias"
-        diasRestantes <= 7 -> "Alerta: vence en $diasRestantes dias"
-        diasRestantes <= 15 -> "Alerta: faltan $diasRestantes dias para vencer"
-        diasRestantes <= 30 -> "Alerta: vence dentro de un mes ($diasRestantes dias)"
-        else -> null
-    }
-}
-
-@Composable
-private fun FacturasScreen(
-    facturas: List<Factura>,
-    clientes: List<Cliente>
-) {
-    LazyColumn(
-        modifier = screenModifier(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        item {
-            HeroCard(
-                title = "Facturas y ventas",
-                subtitle = "Historial, edicion de lineas, anulacion y seguimiento del cliente."
-            )
-        }
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                SummaryCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Facturas",
-                    value = facturas.size.toString()
-                )
-                SummaryCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Clientes",
-                    value = clientes.size.toString()
-                )
-            }
-        }
-        item {
-            SectionTitle("Historial")
-        }
-        items(facturas) { factura ->
-            FacturaCard(factura = factura)
-        }
-    }
-}
-
-@Composable
-private fun ReportesScreen(
-    reporte: ReporteResumen,
-    facturas: List<Factura>
-) {
-    LazyColumn(
-        modifier = screenModifier(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        item {
-            HeroCard(
-                title = "Reporte diario",
-                subtitle = "Resumen de ventas, ganancia, metodos de pago y rendimiento por producto."
-            )
-        }
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                SummaryCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Ventas",
-                    value = "RD$ ${"%.2f".format(reporte.ventas)}"
-                )
-                SummaryCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Facturas",
-                    value = reporte.facturas.toString()
-                )
-            }
-        }
-        item {
-            SummaryCard(
-                title = "Ganancias estimadas",
-                value = "RD$ ${"%.2f".format(reporte.ganancia)}"
-            )
-        }
-        item {
-            SectionTitle("Metodos de pago")
-        }
-        items(reporte.porPago.toList()) { (metodo, total) ->
-            InfoCard(
-                title = metodo,
-                line1 = "Total: RD$ ${"%.2f".format(total)}",
-                line2 = "Participacion en el cierre diario"
-            )
-        }
-        item {
-            SectionTitle("Productos mas vendidos")
-        }
-        items(reporte.porProducto.toList()) { (producto, cantidad) ->
-            InfoCard(
-                title = producto,
-                line1 = "Cantidad vendida: ${"%.0f".format(cantidad)}",
-                line2 = "Consolidado desde ventas del dia"
-            )
-        }
-        item {
-            SectionTitle("Facturas incluidas")
-        }
-        items(facturas.take(3)) { factura ->
-            FacturaCard(factura = factura)
-        }
-    }
-}
-
-@Composable
-private fun ConfiguracionScreen(
-    clientes: List<Cliente>,
-    usuarios: List<String>
-) {
-    LazyColumn(
-        modifier = screenModifier(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        item {
-            HeroCard(
-                title = "Configuracion",
-                subtitle = "Licencia, usuarios, datos del negocio, mensajes del ticket y respaldos."
-            )
-        }
-        item {
-            SectionTitle("Modulos del sistema Python")
-        }
-        items(
-            listOf(
-                "Activacion de licencia",
-                "Inicio de sesion por usuario",
-                "Gestion de usuarios",
-                "Configurar factura",
-                "Backup automatico",
-                "Impresora y ticket"
-            )
-        ) { module ->
-            ActionCard(title = module)
-        }
-        item {
-            SectionTitle("Usuarios de ejemplo")
-        }
-        items(usuarios) { usuario ->
-            InfoCard(
-                title = usuario,
-                line1 = "Rol configurado en el sistema",
-                line2 = "Puede condicionar accesos en Android"
-            )
-        }
-        item {
-            SectionTitle("Clientes registrados")
-        }
-        items(clientes) { cliente ->
-            InfoCard(
-                title = cliente.nombre,
-                line1 = cliente.documento,
-                line2 = cliente.telefono
-            )
-        }
-    }
-}
-
-private fun screenModifier(): Modifier {
-    return Modifier
-        .fillMaxSize()
-        .background(
-            brush = Brush.verticalGradient(
-                colors = listOf(Color(0xFFF6F1E9), Color.White)
-            )
-        )
-}
-
-@Composable
-private fun BrandHeroCard() {
-    Surface(
-        shape = RoundedCornerShape(28.dp),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFFF7FBFF), Color(0xFFEAF3FF))
-                    ),
-                    shape = RoundedCornerShape(28.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                BrandMark()
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "VENDE",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color(0xFF0C4DA2),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontStyle = FontStyle.Italic
-                    )
-                    Text(
-                        text = "FACIL",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color(0xFFFF7A00),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontStyle = FontStyle.Italic
-                    )
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFD80E11))
-                            .padding(horizontal = 14.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "RD",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontStyle = FontStyle.Italic
-                        )
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = metric.color.copy(alpha = 0.12f)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Box(modifier = Modifier.padding(8.dp), contentAlignment = Alignment.Center) {
+                                    Icon(metric.icon, contentDescription = null, tint = metric.color)
+                                }
+                            }
+                            Text(metric.title, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text(metric.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -581,377 +335,311 @@ private fun BrandHeroCard() {
 }
 
 @Composable
-private fun BrandMark() {
-    BoxWithConstraints(
-        modifier = Modifier
-            .width(112.dp)
-            .height(96.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 4.dp, bottom = 34.dp)
-                .width(16.dp)
-                .height(24.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color(0xFF0C4DA2))
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 26.dp, bottom = 34.dp)
-                .width(16.dp)
-                .height(40.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color(0xFFFF7A00))
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 48.dp, bottom = 34.dp)
-                .width(16.dp)
-                .height(56.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color(0xFF19A533))
-        )
-        Text(
-            text = "↗",
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 34.dp),
-            color = Color(0xFF19A533),
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Black
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .width(90.dp)
-                .height(42.dp)
-                .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 16.dp, bottomStart = 18.dp, bottomEnd = 10.dp))
-                .background(Color(0xFFD80E11))
-        ) {
-            Text(
-                text = "✓",
-                modifier = Modifier.align(Alignment.Center),
-                color = Color.White,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black
-            )
-        }
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 6.dp, top = 12.dp)
-                .width(10.dp)
-                .height(26.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFD80E11))
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 14.dp, bottom = 4.dp)
-                .width(14.dp)
-                .height(14.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .background(Color(0xFFD80E11))
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 60.dp, bottom = 4.dp)
-                .width(14.dp)
-                .height(14.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .background(Color(0xFFD80E11))
-        )
-    }
-}
-
-@Composable
-private fun HeroCard(
-    title: String,
-    subtitle: String?
-) {
-    Surface(
-        shape = RoundedCornerShape(28.dp),
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFF1E4D40), Color(0xFF3E7C59))
-                    ),
-                    shape = RoundedCornerShape(28.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                if (!subtitle.isNullOrBlank()) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold
-    )
-}
-
-@Composable
-private fun AddProductDialog(
-    onDismiss: () -> Unit,
-    onAddProduct: (Producto) -> Unit
-) {
-    var nombre by remember { mutableStateOf("") }
-    var precio by remember { mutableStateOf("") }
-    var stock by remember { mutableStateOf("") }
-    var costo by remember { mutableStateOf("") }
-    var vencimiento by remember { mutableStateOf("") }
-    val codigoGenerado = remember { "PROD-${System.currentTimeMillis().toString().takeLast(6)}" }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Nuevo producto") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Codigo automatico: $codigoGenerado",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") })
-                OutlinedTextField(value = precio, onValueChange = { precio = it }, label = { Text("Precio") })
-                OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Stock") })
-                OutlinedTextField(value = costo, onValueChange = { costo = it }, label = { Text("Costo") })
-                OutlinedTextField(value = vencimiento, onValueChange = { vencimiento = it }, label = { Text("Vencimiento") })
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val producto = Producto(
-                        codigo = codigoGenerado,
-                        nombre = nombre.ifBlank { "Producto nuevo" },
-                        precio = precio.toDoubleOrNull() ?: 0.0,
-                        stock = stock.toIntOrNull() ?: 0,
-                        costo = costo.toDoubleOrNull() ?: 0.0,
-                        vencimiento = vencimiento
-                    )
-                    onAddProduct(producto)
-                }
-            ) {
-                Text("Agregar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        }
-    )
-}
-
-@Composable
-private fun SummaryCard(
-    modifier: Modifier = Modifier,
-    title: String,
-    value: String
-) {
+private fun ShortcutTile(shortcut: DashboardShortcut, onClick: () -> Unit) {
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F4EF))
+        onClick = onClick,
+        modifier = Modifier
+            .width(160.dp)
+            .height(100.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(text = title, style = MaterialTheme.typography.labelLarge)
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.Center) {
+            Icon(shortcut.icon, contentDescription = null, tint = shortcut.color)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(shortcut.title, fontWeight = FontWeight.Bold)
+            Text(shortcut.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ActivityItem(log: AuditLog) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(40.dp)
+                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp))
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(log.action, fontWeight = FontWeight.Medium)
+            Text(log.details, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Text(
+            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(log.createdAt)),
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
+}
+
+@Composable
+fun InventoryScreen(viewModel: InventoryViewModel) {
+    val products by viewModel.products.collectAsStateWithLifecycle()
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedProduct by remember { mutableStateOf<Product?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf<Product?>(null) }
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                selectedProduct = null
+                showDialog = true
+            }) {
+                Icon(Icons.Default.Add, contentDescription = "Agregar")
+            }
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
             Text(
-                text = value,
+                "Catálogo de Productos",
                 style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(16.dp),
                 fontWeight = FontWeight.Bold
             )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(products) { product ->
+                    ProductItem(
+                        product = product,
+                        onEdit = {
+                            selectedProduct = product
+                            showDialog = true
+                        },
+                        onDelete = { showDeleteConfirm = product }
+                    )
+                }
+            }
         }
+    }
+
+    if (showDialog) {
+        ProductDialog(
+            product = selectedProduct,
+            onDismiss = { showDialog = false },
+            onConfirm = {
+                viewModel.save(it)
+                showDialog = false
+            }
+        )
+    }
+
+    if (showDeleteConfirm != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = null },
+            title = { Text("Confirmar eliminación") },
+            text = { Text("¿Estás seguro de que deseas eliminar este producto: ${showDeleteConfirm?.name}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.delete(showDeleteConfirm!!.id)
+                    showDeleteConfirm = null
+                }) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = null }) { Text("Cancelar") }
+            }
+        )
     }
 }
 
 @Composable
-private fun ActionCard(title: String) {
+private fun ProductItem(product: Product, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
+                .padding(16.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Outlined.PointOfSale,
-                contentDescription = null,
-                tint = Color(0xFF1E4D40)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(product.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Cod: ${product.code} | Stock: ${product.stock}", style = MaterialTheme.typography.bodyMedium)
+                Text("Precio: RD$ ${"%.2f".format(product.price)} | Costo: RD$ ${"%.2f".format(product.cost)}", style = MaterialTheme.typography.bodySmall)
+                if (product.description.isNotBlank()) {
+                    Text("Vencimiento: ${product.description}", style = MaterialTheme.typography.bodySmall, color = Color.Red)
+                }
+            }
+            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Editar") }
+            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error) }
         }
     }
 }
 
 @Composable
-private fun AlertCard(
-    title: String,
-    description: String
+private fun ProductDialog(product: Product?, onDismiss: () -> Unit, onConfirm: (Product) -> Unit) {
+    var name by remember { mutableStateOf(product?.name ?: "") }
+    var code by remember { mutableStateOf(product?.code ?: "PROD-${System.currentTimeMillis().toString().takeLast(6)}") }
+    var price by remember { mutableStateOf(product?.price?.toString() ?: "") }
+    var stock by remember { mutableStateOf(product?.stock?.toString() ?: "") }
+    var cost by remember { mutableStateOf(product?.cost?.toString() ?: "") }
+    var vencimiento by remember { mutableStateOf(product?.description ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (product == null) "Agregar Producto" else "Editar Producto") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(value = code, onValueChange = { code = it }, label = { Text("Código (Auto)") }, modifier = Modifier.fillMaxWidth(), readOnly = true)
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Precio") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Costo") }, modifier = Modifier.weight(1f))
+                }
+                OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Stock") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = vencimiento, onValueChange = { vencimiento = it }, label = { Text("Vencimiento") }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("AAAA-MM-DD") })
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                val p = (product ?: Product()).copy(
+                    code = code,
+                    name = name,
+                    price = price.toDoubleOrNull() ?: 0.0,
+                    cost = cost.toDoubleOrNull() ?: 0.0,
+                    stock = stock.toIntOrNull() ?: 0,
+                    description = vencimiento
+                )
+                onConfirm(p)
+            }) { Text("Guardar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
+@Composable
+fun CustomersScreen(
+    viewModel: CustomersViewModel,
+    salesViewModel: SalesViewModel,
+    navController: androidx.navigation.NavController
 ) {
-    Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4E5))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(text = description, style = MaterialTheme.typography.bodyMedium)
+    val customers by viewModel.customers.collectAsStateWithLifecycle()
+    var showDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showDialog = true }) {
+                Icon(Icons.Default.Add, contentDescription = "Agregar")
+            }
         }
-    }
-}
-
-@Composable
-private fun ProductoCard(producto: Producto) {
-    InfoCard(
-        title = producto.nombre,
-        line1 = "Codigo ${producto.codigo} | Precio: RD$ ${"%.2f".format(producto.precio)}",
-        line2 = "Stock: ${producto.stock} | Costo: RD$ ${"%.2f".format(producto.costo)} | Vence: ${producto.vencimiento.ifBlank { "N/D" }}"
-    )
-}
-
-@Composable
-private fun SaleItemCard(item: VentaItem) {
-    InfoCard(
-        title = item.nombre,
-        line1 = "Cant: ${"%.0f".format(item.cantidad)} | Precio: RD$ ${"%.2f".format(item.precio)}",
-        line2 = "Subtotal: RD$ ${"%.2f".format(item.subtotal)}"
-    )
-}
-
-@Composable
-private fun TotalCard(total: Double, devuelta: Double) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F473C))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(text = "Total venta", color = Color.White.copy(alpha = 0.9f))
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
             Text(
-                text = "RD$ ${"%.2f".format(total)}",
-                color = Color.White,
+                "Directorio de Clientes",
                 style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(16.dp),
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = "Devuelta estimada: RD$ ${"%.2f".format(devuelta)}",
-                color = Color.White.copy(alpha = 0.84f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun InfoCard(
-    title: String,
-    line1: String,
-    line2: String
-) {
-    Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(text = line1, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = line2,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun FacturaCard(factura: Factura) {
-    val statusColor = if (factura.estado == "Pagada") Color(0xFF2E7D32) else Color(0xFFC17900)
-    Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = factura.numero,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = factura.estado,
-                    color = statusColor,
-                    style = MaterialTheme.typography.labelLarge
-                )
+                items(customers) { customer ->
+                    CustomerItem(
+                        customer = customer,
+                        onSelect = {
+                            salesViewModel.selectCustomer(customer.id)
+                            navController.navigate("sales") {
+                                popUpTo("dashboard") { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                }
             }
-            Text(text = factura.cliente, style = MaterialTheme.typography.bodyLarge)
-            Text(text = "Total: RD$ ${"%.2f".format(factura.total)}", style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = "Fecha: ${factura.fecha} | Pago: ${factura.metodoPago}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        }
+    }
+
+    if (showDialog) {
+        CustomerDialog(
+            onDismiss = { showDialog = false },
+            onConfirm = {
+                viewModel.save(it)
+                showDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun CustomerItem(customer: Customer, onSelect: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(customer.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Tel: ${customer.phone}", style = MaterialTheme.typography.bodyMedium)
+            Text("Dir: ${customer.address}", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Balance: RD$ ${"%.2f".format(customer.balance)}", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                Text("Límite: RD$ ${"%.2f".format(customer.creditLimit)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
+
+@Composable
+private fun CustomerDialog(onDismiss: () -> Unit, onConfirm: (Customer) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var limit by remember { mutableStateOf("5000") }
+    var balance by remember { mutableStateOf("0") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nuevo Cliente") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = balance, onValueChange = { balance = it }, label = { Text("Balance Inicial") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = limit, onValueChange = { limit = it }, label = { Text("Límite Crédito") }, modifier = Modifier.weight(1f))
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm(Customer(
+                    name = name,
+                    phone = phone,
+                    address = address,
+                    balance = balance.toDoubleOrNull() ?: 0.0,
+                    creditLimit = limit.toDoubleOrNull() ?: 0.0
+                ))
+            }) { Text("Guardar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
+@Composable fun SalesScreen(vm: SalesViewModel, navController: androidx.navigation.NavController) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Ventas") } }
+@Composable fun SuppliersScreen(vm: SuppliersViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Proveedores") } }
+@Composable fun PurchasesScreen(vm: PurchasesViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Compras") } }
+@Composable fun CashScreen(vm: CashViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Caja") } }
+@Composable fun ReportsScreen(vm: ReportsViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Reportes") } }
+@Composable fun AuditScreen(vm: AuditViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Auditoria") } }

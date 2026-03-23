@@ -19,7 +19,7 @@
   <text x="40" y="360" fill="#1D1E1B" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">Alertas</text>
 
   <rect x="38" y="382" width="344" height="84" rx="22" fill="#FFF4E5"/>
-  <text x="58" y="416" fill="#1F1F1F" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">Jarabe infantil</text>
+    <text x="58" y="416" fill="#1F1F1F" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">Jarabe adulto</text>
   <text x="58" y="442" fill="#6C5A3A" font-family="Segoe UI, Arial, sans-serif" font-size="14">Stock: 5 | Vence: 2026-04-20</text>
 
   <text x="40" y="500" fill="#1D1E1B" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">Catalogo</text>

@@ -16,7 +16,7 @@ object SampleData {
     val productos = listOf(
         Producto("1001", "Paracetamol 500mg", 220.0, 8, 150.0, "2026-09-30"),
         Producto("1002", "Ibuprofeno 400mg", 145.5, 15, 96.0, "2026-08-15"),
-        Producto("1003", "Jarabe infantil", 980.0, 5, 760.0, "2026-04-20"),
+        Producto("1003", "Jarabe para adultos", 980.0, 5, 760.0, "2026-04-20"),
         Producto("1004", "Papel para tickets", 12.0, 50, 7.0, "")
     )
 
@@ -29,7 +29,7 @@ object SampleData {
 
     val carritoDemo = listOf(
         VentaItem("1001", "Paracetamol 500mg", 2.0, 220.0, 440.0),
-        VentaItem("1003", "Jarabe infantil", 1.0, 980.0, 980.0),
+        VentaItem("1003", "Jarabe para adultos", 1.0, 980.0, 980.0),
         VentaItem("1004", "Papel para tickets", 3.0, 12.0, 36.0)
     )
 
@@ -44,7 +44,7 @@ object SampleData {
         ),
         porProducto = mapOf(
             "Paracetamol 500mg" to 7.0,
-            "Jarabe infantil" to 3.0,
+            "Jarabe para adultos" to 3.0,
             "Ibuprofeno 400mg" to 5.0
         )
     )
