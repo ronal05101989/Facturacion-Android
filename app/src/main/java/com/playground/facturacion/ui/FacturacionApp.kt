@@ -212,7 +212,7 @@ private fun MainShell(factory: AppViewModelFactory, user: LoggedInUser) {
             ) {
                 composable("dashboard") { DashboardScreen(dashboardViewModel, auditViewModel, navController, user) }
                 composable("inventory") { InventoryScreen(inventoryViewModel) }
-                composable("sales") { SalesScreen(salesViewModel, navController) }
+                composable("sales") { SalesScreen(salesViewModel) }
                 composable("customers") { CustomersScreen(customersViewModel, salesViewModel, navController) }
                 composable("suppliers") { SuppliersScreen(suppliersViewModel) }
                 composable("purchases") { PurchasesScreen(purchasesViewModel) }
@@ -583,7 +583,8 @@ private fun CustomerItem(customer: Customer, onSelect: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onSelect),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(customer.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -637,7 +638,7 @@ private fun CustomerDialog(onDismiss: () -> Unit, onConfirm: (Customer) -> Unit)
     )
 }
 
-@Composable fun SalesScreen(vm: SalesViewModel, navController: androidx.navigation.NavController) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Ventas") } }
+@Composable fun SalesScreen(vm: SalesViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Ventas") } }
 @Composable fun SuppliersScreen(vm: SuppliersViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Proveedores") } }
 @Composable fun PurchasesScreen(vm: PurchasesViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Compras") } }
 @Composable fun CashScreen(vm: CashViewModel) { Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Modulo Caja") } }

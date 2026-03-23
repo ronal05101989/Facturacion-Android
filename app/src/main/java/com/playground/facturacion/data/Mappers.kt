@@ -47,9 +47,9 @@ fun Product.toEntity(now: Long) = ProductEntity(
     updatedAt = now
 )
 
-fun CustomerEntity.toDomain() = Customer(id, name, phone, email, address, document)
+fun CustomerEntity.toDomain() = Customer(id, name, phone, email, address, document, balance, creditLimit)
 
-fun Customer.toEntity(now: Long) = CustomerEntity(id, name, phone, email, address, document, now)
+fun Customer.toEntity(now: Long) = CustomerEntity(id, name, phone, email, address, document, balance, creditLimit, now)
 
 fun SupplierEntity.toDomain() = Supplier(id, name, phone, email, address, contactPerson)
 
